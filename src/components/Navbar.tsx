@@ -7,14 +7,14 @@ interface NavbarProps {
 
 const Navbar = ({ toggleSidebar }: NavbarProps) => {
   return (
-    <div className="flex justify-between items-center p-4 border-b bg-white shadow-sm">
+    <div className="flex justify-between items-center p-4 border-b bg-white shadow-sm ">
       
       <button onClick={toggleSidebar} className="text-gray-700 lg:hidden">
         <FaBars size={24} />
       </button>
 
-      <div className="flex-grow flex justify-center">
-        <div className="flex items-center border rounded-md px-4 py-2 w-full max-w-2xl">
+      <div className="flex-grow flex justify-center ml-4">
+        <div className="flex items-center border rounded-md px-4 py-2 w-full max-w-2xl ">
           <FaSearch className="text-gray-500" />
           <input
             type="text"
@@ -25,7 +25,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
       </div>
 
    
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 ml-4">
         <FaBell className="text-gray-500 cursor-pointer" />
         <DropdownMenu />
       </div>
