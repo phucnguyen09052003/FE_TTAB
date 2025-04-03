@@ -2,8 +2,8 @@ import { useState ,Fragment} from "react";
 
 import pdflogo from '/pdf-svgrepo-com.svg'
 
-import Sidebar from "./Sidebar";
-import Navbar from "./Navbar";
+import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
 const years = [2025, 2024, 2023];
 const salaryRecords: Record<number, Record<string, boolean>> = {
   2025: { "01": true, "02": true, "03": true, "04": false, "05": false, "06": false },
@@ -96,23 +96,21 @@ const MyProfile = () => {
           </div>
 
          
-          <div className=" grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
   {Object.keys(salaryRecords[selectedYear]).map((month) => (
-    <div key={month} className="flex flex-col items-center">
-     
-      <div className="border rounded-md p-4 w-80 h-40 flex items-center justify-center">
+    <div key={month} className="flex flex-col items-center min-w-[450px]">
+      <div className="border rounded-md p-4 w-80 h-60 flex items-center justify-center">
         {salaryRecords[selectedYear][month] ? (
           <a href="#">
-          <img src={pdflogo} alt="PDF" className="w-120 h-20" />
+            <img src={pdflogo} alt="PDF" className="w-120 h-20" />
           </a>
-
         ) : (
           <div className="w-16 h-16 bg-gray-200"></div>
         )}
       </div>
-
-   
-      <p className="mt-2 px-2 py-1 bg-gray-300 rounded-md">{selectedYear}/{month}</p>
+      <p className="mt-2 px-2 py-4 bg-gray-300 rounded-md h-12 flex items-center justify-center">
+        {selectedYear}/{month}
+      </p>
     </div>
   ))}
 </div>
