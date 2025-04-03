@@ -20,7 +20,8 @@ const Home = () => {
         <Navbar toggleSidebar={toggleSidebar} />
 
        
-        <main className="p-6">
+        <main className="p-6 text-sm md:text-base lg:text-lg overflow-x-hidden">
+
         
           <h2 className="text-xl font-bold">THÔNG TIN CHÍNH SÁCH QUY ĐỊNH</h2>
 
@@ -33,7 +34,8 @@ const Home = () => {
               <h3 className="font-bold">Hướng dẫn sử dụng hệ thống</h3>
               <a href="#" className="text-blue-500 text-sm">Tất cả</a>
             </div>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
               <Card title="Đăng ký vắng mặt" />
               <Card title="Đăng ký ngoài giờ" />
               <Card title="Đăng ký đổi ca" />
@@ -50,7 +52,8 @@ const Home = () => {
               <h3 className="font-bold">Sổ tay nhân viên</h3>
               <a href="#" className="text-blue-500 text-sm">Tất cả</a>
             </div>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
               <Card title="Nội quy lao động" />
               <Card title="Chính sách công tác trong nước" />
               <Card title="Chính sách tuyển dụng người thân" />
@@ -67,7 +70,8 @@ const Home = () => {
               <h3 className="font-bold">Sổ tay bảo hiểm</h3>
               <a href="#" className="text-blue-500 text-sm">Tất cả</a>
             </div>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
               <Card title="Sổ tay bảo hiểm" />
               <Card title="Quy định bồi thường" />
               <Card title="Quy định bảo lãnh" />
