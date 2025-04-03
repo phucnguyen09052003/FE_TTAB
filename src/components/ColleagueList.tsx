@@ -1,6 +1,6 @@
 const colleagues = [
-    { name: "Nguyễn Hoàng Phúc", email: "phucnguyen.090503@gmail.com", phone: "0934057253", photo: "https://via.placeholder.com/40" },
-    { name: "Nguyễn Hoàng Phúc", email: "phucnguyen.090503@gmail.com", phone: "0934057253", photo: "https://via.placeholder.com/40" }
+    { name: "Nguyễn Hoàng Phúc", email: "example@gmail.com", phone: "0123456789", photo: "https://via.placeholder.com/40" },
+    { name: "Nguyễn Hoàng Phúc", email: "example.090503@gmail.com", phone: "0123456789", photo: "https://via.placeholder.com/40" }
   ];
   
   const ColleagueList = () => {
