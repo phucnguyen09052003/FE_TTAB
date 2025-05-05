@@ -21,7 +21,8 @@ const Organization = () => {
             <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-800 mb-4 sm:mb-6 px-2">
               SƠ ĐỒ TỔ CHỨC
             </h2>
-            <div className="bg-white rounded-lg shadow">
+            {/* Hide on mobile (smaller than sm breakpoint) */}
+            <div className="hidden sm:block bg-white rounded-lg shadow">
               <div className="overflow-x-auto">
                 <OrgChart />
               </div>

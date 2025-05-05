@@ -7,6 +7,76 @@ interface Colleague {
   employeePhoneNumber: string;
 }
 
+const ColleagueModal = ({ 
+  colleague, 
+  isOpen, 
+  onClose 
+}: { 
+  colleague: Colleague | null;
+  isOpen: boolean;
+  onClose: () => void;
+}) => {
+  if (!isOpen || !colleague) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg max-w-md w-full">
+        <div className="p-6">
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-xl font-bold text-gray-900">
+              Thông tin chi tiết
+            </h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-500"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex justify-center">
+              <img
+                src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"
+                alt={`${colleague.employeeName}'s avatar`}
+                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+              />
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium text-gray-500">Họ và tên</label>
+                <p className="mt-1 text-gray-900">{colleague.employeeName}</p>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-500">Email</label>
+                <p className="mt-1 text-blue-600">{colleague.email}</p>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-500">Số điện thoại</label>
+                <p className="mt-1 text-gray-900">{colleague.employeePhoneNumber}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-gray-50 px-6 py-4 rounded-b-lg">
+          <button
+            onClick={onClose}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ColleagueList = () => {
     const [colleagues, setColleagues] = useState<Colleague[]>([]);
     const [loading, setLoading] = useState(true);
@@ -14,6 +84,8 @@ const ColleagueList = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
     const itemsPerPageOptions = [5, 10, 15, 20];
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(null);
 
     useEffect(() => {
         const fetchColleagues = async () => {
@@ -93,8 +165,14 @@ const ColleagueList = () => {
                     </thead>
                     <tbody>
                         {currentItems.map((colleague, index) => (
-                            <tr key={colleague.employeeName} 
-                                className="bg-white border-b hover:bg-gray-50">
+                            <tr 
+                                key={colleague.employeeName} 
+                                className="bg-white border-b hover:bg-gray-50 cursor-pointer"
+                                onClick={() => {
+                                    setSelectedColleague(colleague);
+                                    setIsModalOpen(true);
+                                }}
+                            >
                                 <td className="p-4 text-gray-500">
                                     {indexOfFirstItem + index + 1}
                                 </td>
@@ -162,6 +240,16 @@ const ColleagueList = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Modal */}
+            <ColleagueModal 
+                colleague={selectedColleague} 
+                isOpen={isModalOpen} 
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setSelectedColleague(null);
+                }} 
+            />
         </div>
     );
 };

@@ -26,6 +26,8 @@ const Promotion = () => {
   const [filterCompany, setFilterCompany] = useState("");
   const [filterDiscount, setFilterDiscount] = useState("");
   const [filterDate, setFilterDate] = useState("");
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
     const fetchPromotions = async () => {
@@ -111,15 +113,42 @@ const Promotion = () => {
     setCurrentPage(1);
   }, [filterCompany, filterDiscount, filterDate]);
 
-  const filteredData = promotions.filter(promo => {
-    const matchesCompany = !filterCompany || promo.companyName === filterCompany;
-    const matchesDiscount = !filterDiscount || 
-      Number(promo.couponDiscount) === Number(filterDiscount);
-    const matchesDate = !filterDate || 
-      new Date(promo.couponDateStart).toISOString().split('T')[0] === filterDate;
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
-    return matchesCompany && matchesDiscount && matchesDate;
-  });
+  const filteredData = promotions
+    .filter(promo => {
+      const matchesCompany = !filterCompany || promo.companyName === filterCompany;
+      const matchesDiscount = !filterDiscount || 
+        Number(promo.couponDiscount) === Number(filterDiscount);
+      const matchesDate = !filterDate || 
+        new Date(promo.couponDateStart).toISOString().split('T')[0] === filterDate;
+
+      return matchesCompany && matchesDiscount && matchesDate;
+    })
+    .sort((a, b) => {
+      if (!sortField) return 0;
+      
+      if (sortField === 'discount') {
+        const aValue = Number(a.couponDiscount);
+        const bValue = Number(b.couponDiscount);
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      
+      if (sortField === 'date') {
+        const aValue = new Date(a.couponDateStart).getTime();
+        const bValue = new Date(b.couponDateStart).getTime();
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      
+      return 0;
+    });
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -262,8 +291,32 @@ const Promotion = () => {
                       <div className="flex items-center">Tên</div>
                     </th>
                     <th className="hidden md:table-cell px-3 md:px-4 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Công ty</th>
-                    <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giảm giá</th>
-                    <th className="hidden md:table-cell px-3 md:px-4 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày bắt đầu</th>
+                    <th 
+                      className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('discount')}
+                    >
+                      <div className="flex items-center">
+                        Giảm giá
+                        {sortField === 'discount' && (
+                          <span className="ml-1">
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="hidden md:table-cell px-3 md:px-4 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('date')}
+                    >
+                      <div className="flex items-center">
+                        Ngày bắt đầu
+                        {sortField === 'date' && (
+                          <span className="ml-1">
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
