@@ -1,8 +1,8 @@
-import Sidebar from "./Sidebar";
-import Navbar from "./Navbar";
-import OrgChart from "./OrgChart";
+import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
+import OrgChart from "../components/OrgChart";
 import { useState } from "react";
-import ColleagueList from "./ColleagueList";
+import ColleagueList from "../components/ColleagueList";
 
 const Organization = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

@@ -20,19 +20,19 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
           <FaSearch className="text-indigo-300" />
           <input
             type="text"
-            placeholder="Tìm kiếm..."
+            placeholder="Tìm kiếm khuyến mãi..."
             className="px-4 py-1 bg-transparent outline-none w-full text-white placeholder-indigo-300 focus:placeholder-indigo-200"
           />
         </div>
       </div>
 
       <div className="flex items-center gap-6 ml-4">
-        <div className="relative">
+        {/* <div className="relative">
           <FaBell className="text-indigo-100 hover:text-white cursor-pointer transition-colors" size={20} />
           <span className="absolute -top-2 -right-2 bg-red-500 text-xs text-white rounded-full w-5 h-5 flex items-center justify-center">
             3
           </span>
-        </div>
+        </div> */}
         <DropdownMenu />
       </div>
     </div>

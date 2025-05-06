@@ -2,9 +2,28 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 interface Colleague {
+  employeeId: number;
+  employeeCode: string;
   employeeName: string;
   email: string;
   employeePhoneNumber: string;
+  employeeLastLogin: string | null;
+  employeeActive: number;
+  companyCode: string;
+  companyName: string;
+}
+
+interface PaginatedResponse {
+  content: Colleague[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+  };
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+  first: boolean;
+  empty: boolean;
 }
 
 const ColleagueModal = ({ 
@@ -50,6 +69,11 @@ const ColleagueModal = ({
                 <label className="text-sm font-medium text-gray-500">Họ và tên</label>
                 <p className="mt-1 text-gray-900">{colleague.employeeName}</p>
               </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-500">Mã nhân viên</label>
+                <p className="mt-1 text-gray-900">{colleague.employeeCode}</p>
+              </div>
               
               <div>
                 <label className="text-sm font-medium text-gray-500">Email</label>
@@ -60,6 +84,27 @@ const ColleagueModal = ({
                 <label className="text-sm font-medium text-gray-500">Số điện thoại</label>
                 <p className="mt-1 text-gray-900">{colleague.employeePhoneNumber}</p>
               </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-500">Công ty</label>
+                <p className="mt-1 text-gray-900">{colleague.companyName} ({colleague.companyCode})</p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-500">Trạng thái</label>
+                <p className="mt-1">
+                  <span className={`px-2 py-1 text-xs rounded-full ${colleague.employeeActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    {colleague.employeeActive ? 'Hoạt động' : 'Không hoạt động'}
+                  </span>
+                </p>
+              </div>
+
+              {colleague.employeeLastLogin && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Đăng nhập gần nhất</label>
+                  <p className="mt-1 text-gray-900">{new Date(colleague.employeeLastLogin).toLocaleString()}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -81,49 +126,57 @@ const ColleagueList = () => {
     const [colleagues, setColleagues] = useState<Colleague[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(5);
+    const [currentPage, setCurrentPage] = useState(0); // API uses 0-based pagination
+    const [itemsPerPage, setItemsPerPage] = useState(10);
     const itemsPerPageOptions = [5, 10, 15, 20];
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(null);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalItems, setTotalItems] = useState(0);
 
     useEffect(() => {
-        const fetchColleagues = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    throw new Error('No token found');
-                }
+        fetchColleagues(currentPage, itemsPerPage);
+    }, [currentPage, itemsPerPage]);
 
-                const response = await axios.get('http://localhost:8080/api/employee/same-company', {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-
-                setColleagues(response.data.data.content);
-            } catch (err) {
-                console.error('Error fetching colleagues:', err);
-                setError(axios.isAxiosError(err) 
-                    ? err.response?.data?.message || 'Không thể tải danh sách đồng nghiệp'
-                    : 'Đã xảy ra lỗi khi tải dữ liệu'
-                );
-            } finally {
-                setLoading(false);
+    const fetchColleagues = async (page: number, size: number) => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No token found');
             }
-        };
 
-        fetchColleagues();
-    }, []);
+            const response = await axios.get(`http://localhost:8080/api/employee/same-company?page=${page}&size=${size}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
 
-    // Pagination calculations
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = colleagues.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(colleagues.length / itemsPerPage);
+            if (response.data?.status === 200) {
+                const paginatedData = response.data.data as PaginatedResponse;
+                setColleagues(paginatedData.content);
+                setTotalPages(paginatedData.totalPages);
+                setTotalItems(paginatedData.totalElements);
+            } else {
+                setError('Failed to fetch colleagues data');
+            }
+        } catch (err) {
+            console.error('Error fetching colleagues:', err);
+            setError(axios.isAxiosError(err) 
+                ? err.response?.data?.message || 'Không thể tải danh sách đồng nghiệp'
+                : 'Đã xảy ra lỗi khi tải dữ liệu'
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    if (loading) return <div className="p-6 text-center text-gray-500">Đang tải dữ liệu...</div>;
+    if (loading && colleagues.length === 0) return <div className="p-6 text-center text-gray-500">Đang tải dữ liệu...</div>;
     if (error) return <div className="p-6 text-center text-red-500">{error}</div>;
+
+    // Calculate displayed items range
+    const startItem = currentPage * itemsPerPage + 1;
+    const endItem = Math.min((currentPage + 1) * itemsPerPage, totalItems);
 
     return (
         <div className="w-full overflow-hidden">
@@ -140,7 +193,7 @@ const ColleagueList = () => {
                         value={itemsPerPage}
                         onChange={(e) => {
                             setItemsPerPage(Number(e.target.value));
-                            setCurrentPage(1);
+                            setCurrentPage(0); // Reset to first page when changing items per page
                         }}
                         className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
                     >
@@ -159,14 +212,16 @@ const ColleagueList = () => {
                             <th scope="col" className="p-4 w-[60px]">STT</th>
                             <th scope="col" className="p-4 w-[80px]">Hình ảnh</th>
                             <th scope="col" className="p-4">Họ tên</th>
+                            <th scope="col" className="p-4">Mã nhân viên</th>
                             <th scope="col" className="p-4 hidden sm:table-cell">Email</th>
                             <th scope="col" className="p-4 hidden md:table-cell">Điện thoại</th>
+                            <th scope="col" className="p-4 hidden lg:table-cell">Trạng thái</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {currentItems.map((colleague, index) => (
+                        {colleagues.map((colleague, index) => (
                             <tr 
-                                key={colleague.employeeName} 
+                                key={colleague.employeeId} 
                                 className="bg-white border-b hover:bg-gray-50 cursor-pointer"
                                 onClick={() => {
                                     setSelectedColleague(colleague);
@@ -174,7 +229,7 @@ const ColleagueList = () => {
                                 }}
                             >
                                 <td className="p-4 text-gray-500">
-                                    {indexOfFirstItem + index + 1}
+                                    {startItem + index}
                                 </td>
                                 <td className="p-4">
                                     <img
@@ -187,25 +242,26 @@ const ColleagueList = () => {
                                     <div className="font-medium text-gray-900">
                                         {colleague.employeeName}
                                     </div>
-                                    <div className="sm:hidden space-y-1 mt-1">
-                                        <div className="text-sm text-blue-600">
-                                            {colleague.email}
-                                        </div>
-                                        <div className="text-sm text-gray-500">
-                                            {colleague.employeePhoneNumber}
-                                        </div>
+                                </td>
+                                <td className="p-4">
+                                    <div className="text-gray-500">
+                                        {colleague.employeeCode}
                                     </div>
                                 </td>
                                 <td className="p-4 hidden sm:table-cell">
-                                    <a href={`mailto:${colleague.email}`}
-                                       className="text-blue-600 hover:text-blue-800 hover:underline">
+                                    <div className="text-blue-600">
                                         {colleague.email}
-                                    </a>
+                                    </div>
                                 </td>
                                 <td className="p-4 hidden md:table-cell">
                                     <div className="text-gray-500">
                                         {colleague.employeePhoneNumber}
                                     </div>
+                                </td>
+                                <td className="p-4 hidden lg:table-cell">
+                                    <span className={`px-2 py-1 text-xs rounded-full ${colleague.employeeActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                        {colleague.employeeActive ? 'Hoạt động' : 'Không hoạt động'}
+                                    </span>
                                 </td>
                             </tr>
                         ))}
@@ -217,23 +273,23 @@ const ColleagueList = () => {
             <div className="mt-4 flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6 rounded-lg">
                 <div className="flex items-center text-sm text-gray-700">
                     <span>
-                        Hiển thị {indexOfFirstItem + 1} đến {Math.min(indexOfLastItem, colleagues.length)} trong số {colleagues.length} mục
+                        Hiển thị {startItem} đến {endItem} trong số {totalItems} mục
                     </span>
                 </div>
                 <div className="flex items-center space-x-2">
                     <button
-                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))}
+                        disabled={currentPage === 0}
                         className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Trước
                     </button>
                     <span className="px-3 py-1 text-sm text-gray-700">
-                        Trang {currentPage} / {totalPages}
+                        Trang {currentPage + 1} / {totalPages}
                     </span>
                     <button
-                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages - 1))}
+                        disabled={currentPage === totalPages - 1}
                         className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Sau
@@ -248,7 +304,7 @@ const ColleagueList = () => {
                 onClose={() => {
                     setIsModalOpen(false);
                     setSelectedColleague(null);
-                }} 
+                }}
             />
         </div>
     );
