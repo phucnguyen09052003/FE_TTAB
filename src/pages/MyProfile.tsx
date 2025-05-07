@@ -5,6 +5,8 @@ import Navbar from "../components/Navbar";
 import { jwtDecode } from 'jwt-decode';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { INFO_EMPLOYEE_ENDPOINTS, SALARY_ENDPOINTS } from "../utils/apiEndpoints";
+import { API_BASE_URL } from "../utils/env.config";
 
 
 // Constants for select fields
@@ -99,18 +101,18 @@ interface NotificationProps {
 
 const Notification = ({ type, message, onClose }: NotificationProps) => {
   if (!type) return null;
-  
+
   const bgColor = type === 'success' ? 'bg-green-100 border-green-500' : 'bg-red-100 border-red-500';
   const textColor = type === 'success' ? 'text-green-700' : 'text-red-700';
-  
+
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose();
     }, 3000);
-    
+
     return () => clearTimeout(timer);
   }, [onClose]);
-  
+
   return (
     <div className={`fixed top-4 right-4 px-4 py-3 border-l-4 ${bgColor} rounded-md shadow-md`}>
       <div className="flex items-center justify-between">
@@ -139,12 +141,12 @@ const MyProfile = () => {
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  
+
   // Salary data states
   const [salaryData, setSalaryData] = useState<SalaryRecord[]>([]);
   const [loadingSalary, setLoadingSalary] = useState(false);
   const [salaryError, setSalaryError] = useState<string | null>(null);
-  
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(6); // Show 6 items per page as requested
@@ -165,7 +167,7 @@ const MyProfile = () => {
 
   const handleInputChange = (field: string, value: string) => {
     if (!userData) return;
-    
+
     const mapping: { [key: string]: keyof UserData } = {
       "Mã nhân viên": "employeeCode",
       "Chức vụ": "position",
@@ -188,7 +190,7 @@ const MyProfile = () => {
       "Số tài khoản": "accountNumber",
       "Số sổ BHXH": "socialInsuranceNumber",
     };
-    
+
     const dataField = mapping[field];
     if (dataField) {
       setUserData({
@@ -201,13 +203,13 @@ const MyProfile = () => {
   // Handler for date picker changes
   const handleDateChange = (field: string, date: Date | null) => {
     if (!userData || !date) return;
-    
+
     const mapping: { [key: string]: keyof UserData } = {
       "Ngày vào làm": "hireDate",
       "Ngày sinh nhân viên": "dob",
       "Ngày cấp": "issueDate",
     };
-    
+
     const dataField = mapping[field];
     if (dataField) {
       if (dataField === 'dob') {
@@ -231,7 +233,7 @@ const MyProfile = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setImageFile(file);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -243,7 +245,7 @@ const MyProfile = () => {
 
   const saveUserData = async () => {
     if (!userData) return;
-    
+
     setIsSaving(true);
     try {
       const token = localStorage.getItem("token");
@@ -252,35 +254,35 @@ const MyProfile = () => {
       }
 
       const employeeCode = userData.employeeCode;
-      
+
       // Create a copy of userData for sending to API
       const userDataForApi = { ...userData };
-      
+
       // Create FormData for file upload
       const formData = new FormData();
-      
+
       // Add the employee data as a JSON string
       formData.append("employeeData", JSON.stringify(userDataForApi));
-      
+
       // Add the image file if it exists
       if (imageFile) {
         formData.append("image", imageFile);
       }
-      
-      const response = await fetch(`http://localhost:8080/api/info-employee/${employeeCode}`, {
+
+      const response = await fetch(INFO_EMPLOYEE_ENDPOINTS.INFO_EMPLOYEE(employeeCode), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`
         },
         body: formData,
       });
-      
+
       if (!response.ok) {
         throw new Error("Không thể cập nhật thông tin người dùng.");
       }
-      
+
       const result = await response.json();
-      
+
       // Update the user data with the new data returned from the server
       if (result.data) {
         setUserData(result.data);
@@ -288,7 +290,7 @@ const MyProfile = () => {
         // If the API doesn't return updated data, fetch it again
         await fetchUserData();
       }
-      
+
       setIsEditing(false);
       setImageFile(null);
       setImagePreview(null);
@@ -316,21 +318,21 @@ const MyProfile = () => {
       const decodedToken: any = jwtDecode(token);
       employeeCode = decodedToken.employeeCode;
     }
-    
+
     try {
-      const response = await fetch(`http://localhost:8080/api/info-employee/${employeeCode}`, {
+      const response = await fetch(INFO_EMPLOYEE_ENDPOINTS.INFO_EMPLOYEE(employeeCode), {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       if (!response.ok) {
         throw new Error("Không thể lấy dữ liệu người dùng.");
       }
-      
+
       const data = await response.json();
-      
+
       // Set user data
       setUserData(data.data);
     } catch (err) {
@@ -343,18 +345,18 @@ const MyProfile = () => {
   // Fetch salary data from API
   const fetchSalaryData = async (page: number = 0) => {
     if (!userData?.employeeCode) return;
-    
+
     setLoadingSalary(true);
     setSalaryError(null);
-    
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
         throw new Error("Không tìm thấy token đăng nhập.");
       }
-      
+
       const response = await fetch(
-        `http://localhost:8080/api/salary/employee/${userData.employeeCode}/salary/${selectedYear}?page=${page}&size=${pageSize}`, 
+        SALARY_ENDPOINTS.SALARY(userData.employeeCode, selectedYear.toString()),
         {
           method: 'GET',
           headers: {
@@ -362,16 +364,16 @@ const MyProfile = () => {
           }
         }
       );
-      
+
       if (response.status === 404) {
         throw new Error("Không tìm thấy Bảng lương");
       } else if (!response.ok) {
         throw new Error("Không thể lấy dữ liệu lương.");
       }
-      
+
       const data = await response.json();
       setSalaryData(data.data.content || []);
-      
+
       // Set pagination info
       setPaginationInfo({
         pageNumber: data.data.pageable.pageNumber,
@@ -381,10 +383,10 @@ const MyProfile = () => {
         last: data.data.last,
         first: data.data.first
       });
-      
+
       // Update current page
       setCurrentPage(data.data.pageable.pageNumber);
-      
+
     } catch (err) {
       setSalaryError((err as Error).message);
       console.error("Lỗi khi tải dữ liệu lương:", err);
@@ -460,7 +462,7 @@ const MyProfile = () => {
               </div>
               <p className="mt-4 text-lg font-semibold text-indigo-900">{userData?.fullname}</p>
               <p className="text-sm text-indigo-600">{userData?.position}</p>
-              
+
               <div className="mt-6 w-full bg-white rounded-lg shadow-sm border border-indigo-50 p-4">
                 <h3 className="text-md font-semibold text-indigo-900 mb-3 border-b border-indigo-50 pb-2">Thông tin liên hệ</h3>
                 <div className="space-y-2 text-sm">
@@ -653,7 +655,7 @@ const MyProfile = () => {
                 <div className="mt-8 flex justify-end gap-4">
                   {!isEditing ? (
                     <>
-                      <button 
+                      <button
                         onClick={fetchUserData}
                         className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition duration-150 ease-in-out shadow-md flex items-center"
                         disabled={loading}
@@ -675,7 +677,7 @@ const MyProfile = () => {
                           </>
                         )}
                       </button>
-                      <button 
+                      <button
                         onClick={toggleEdit}
                         className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition duration-150 ease-in-out shadow-md flex items-center"
                       >
@@ -687,7 +689,7 @@ const MyProfile = () => {
                     </>
                   ) : (
                     <>
-                      <button 
+                      <button
                         onClick={() => setIsEditing(false)}
                         className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md transition duration-150 ease-in-out flex items-center"
                       >
@@ -696,7 +698,7 @@ const MyProfile = () => {
                         </svg>
                         Hủy
                       </button>
-                      <button 
+                      <button
                         onClick={saveUserData}
                         disabled={isSaving}
                         className={`px-4 py-2 ${isSaving ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'} text-white rounded-md transition duration-150 ease-in-out shadow-md flex items-center`}
@@ -734,11 +736,10 @@ const MyProfile = () => {
               {years.map((year) => (
                 <button
                   key={year}
-                  className={`px-4 py-2 rounded-md font-medium transition duration-150 ease-in-out ${
-                    selectedYear === year
+                  className={`px-4 py-2 rounded-md font-medium transition duration-150 ease-in-out ${selectedYear === year
                       ? "bg-indigo-600 text-white shadow-md"
                       : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
-                  }`}
+                    }`}
                   onClick={() => setSelectedYear(year)}
                 >
                   {year}
@@ -802,7 +803,7 @@ const MyProfile = () => {
                 <p className="mt-2 text-base text-gray-500">
                   Chưa có dữ liệu lương cho năm {selectedYear}.
                 </p>
-                <button 
+                <button
                   onClick={() => fetchSalaryData(0)}
                   className="mt-6 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
@@ -822,7 +823,7 @@ const MyProfile = () => {
                     // Extract month from salaryDate (format: "2023-01-01")
                     const date = new Date(record.salaryDate);
                     const month = String(date.getMonth() + 1).padStart(2, '0');
-                    
+
                     return (
                       <div key={record.id} className="flex flex-col items-center">
                         <div className="w-full max-w-xs border border-indigo-100 rounded-lg p-6 bg-gradient-to-br from-white to-indigo-50 shadow-sm hover:shadow-md transition duration-150 ease-in-out group">
@@ -836,7 +837,7 @@ const MyProfile = () => {
                                   Tháng {month}/{selectedYear}
                                 </p>
                                 <p className="text-center text-sm text-indigo-700">
-                                  <span className="font-semibold">Tổng lương: </span> 
+                                  <span className="font-semibold">Tổng lương: </span>
                                   {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(record.salaryTotalSalary)}
                                 </p>
                               </div>
@@ -853,7 +854,7 @@ const MyProfile = () => {
                                   Tháng {month}/{selectedYear}
                                 </p>
                                 <p className="text-center text-sm text-gray-500">
-                                  <span className="font-semibold">Tổng lương: </span> 
+                                  <span className="font-semibold">Tổng lương: </span>
                                   {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(record.salaryTotalSalary)}
                                 </p>
                                 <p className="text-center text-xs text-yellow-600 mt-1">
@@ -867,7 +868,7 @@ const MyProfile = () => {
                     );
                   })}
                 </div>
-                
+
                 {/* Pagination controls */}
                 {paginationInfo && paginationInfo.totalPages > 1 && (
                   <div className="mt-8 flex justify-center">
@@ -875,40 +876,37 @@ const MyProfile = () => {
                       <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={paginationInfo.first}
-                        className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
-                          paginationInfo.first 
-                            ? 'text-gray-300 cursor-not-allowed' 
+                        className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${paginationInfo.first
+                            ? 'text-gray-300 cursor-not-allowed'
                             : 'text-gray-500 hover:bg-gray-50'
-                        }`}
+                          }`}
                       >
                         <span className="sr-only">Trang trước</span>
                         <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                           <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       </button>
-                      
+
                       {Array.from({ length: paginationInfo.totalPages }).map((_, index) => (
                         <button
                           key={index}
                           onClick={() => handlePageChange(index)}
-                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                            currentPage === index
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === index
                               ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
                               : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                          }`}
+                            }`}
                         >
                           {index + 1}
                         </button>
                       ))}
-                      
+
                       <button
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={paginationInfo.last}
-                        className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
-                          paginationInfo.last 
-                            ? 'text-gray-300 cursor-not-allowed' 
+                        className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${paginationInfo.last
+                            ? 'text-gray-300 cursor-not-allowed'
                             : 'text-gray-500 hover:bg-gray-50'
-                        }`}
+                          }`}
                       >
                         <span className="sr-only">Trang sau</span>
                         <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -918,7 +916,7 @@ const MyProfile = () => {
                     </nav>
                   </div>
                 )}
-                
+
                 {/* Pagination summary */}
                 {paginationInfo && (
                   <div className="mt-3 text-sm text-center text-gray-600">
@@ -948,50 +946,50 @@ const isDateField = (label: string): boolean => {
 // Format date from API format (various formats) to HTML input format (yyyy-mm-dd)
 const formatDateForInput = (dateString: string | undefined): string => {
   if (!dateString) return "";
-  
+
   // Check if the date is already in yyyy-mm-dd format
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
     return dateString;
   }
-  
+
   // Handle ISO date format (e.g., 2025-01-11T17:00:00.000+00:00)
   if (dateString.includes('T')) {
     return dateString.split('T')[0];
   }
-  
+
   // Handle format like "2020-08-13 00:00:00"
   if (dateString.includes(' ') && dateString.includes(':')) {
     return dateString.split(' ')[0];
   }
-  
+
   // Parse dd/mm/yyyy to yyyy-mm-dd
   const parts = dateString.split('/');
   if (parts.length === 3) {
     const [day, month, year] = parts;
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   }
-  
+
   return dateString;
 };
 
 // Format date from HTML input format (yyyy-mm-dd) to API format (dd/mm/yyyy)
 const formatDateForAPI = (dateString: string): string => {
   if (!dateString) return "";
-  
+
   // Parse yyyy-mm-dd to dd/mm/yyyy
   const parts = dateString.split('-');
   if (parts.length === 3) {
     const [year, month, day] = parts;
     return `${day}/${month}/${year}`;
   }
-  
+
   return dateString;
 };
 
 // Get value for input fields, handling date formats
 const getInputValue = (label: string, userData: any): string => {
   if (!userData) return "";
-  
+
   const mapping: { [key: string]: keyof UserData } = {
     "Mã nhân viên": "employeeCode",
     "Chức vụ": "position",
@@ -1014,17 +1012,17 @@ const getInputValue = (label: string, userData: any): string => {
     "Số tài khoản": "accountNumber",
     "Số sổ BHXH": "socialInsuranceNumber",
   };
-  
+
   const field = mapping[label];
   if (!field) return "";
-  
+
   const value = userData[field];
-  
+
   // Format dates for input fields
   if (isDateField(label)) {
     return formatDateForInput(value);
   }
-  
+
   return value || "";
 };
 
@@ -1037,7 +1035,7 @@ const CustomDateInput = ({ label, value, onChange, disabled }: {
 }) => {
   // Parse the date string to a Date object
   const dateValue = value ? new Date(value) : null;
-  
+
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-indigo-900">{label}</label>
@@ -1047,8 +1045,8 @@ const CustomDateInput = ({ label, value, onChange, disabled }: {
           onChange={onChange}
           dateFormat="dd/MM/yyyy"
           className={`w-full px-3 py-2 bg-white border border-indigo-200 rounded-md shadow-sm 
-            ${disabled ? "bg-gray-50 cursor-not-allowed" : 
-            "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"} 
+            ${disabled ? "bg-gray-50 cursor-not-allowed" :
+              "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"} 
             text-indigo-900`}
           disabled={disabled}
           placeholderText="DD/MM/YYYY"
@@ -1062,8 +1060,8 @@ const CustomDateInput = ({ label, value, onChange, disabled }: {
               <input
                 type="text"
                 className={`w-full px-3 py-2 bg-white border border-indigo-200 rounded-md shadow-sm 
-                  ${disabled ? "bg-gray-50 cursor-not-allowed" : 
-                  "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"} 
+                  ${disabled ? "bg-gray-50 cursor-not-allowed" :
+                    "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"} 
                   text-indigo-900 pr-10`}
                 placeholder="DD/MM/YYYY"
                 readOnly
@@ -1071,18 +1069,18 @@ const CustomDateInput = ({ label, value, onChange, disabled }: {
                 disabled={disabled}
               />
               {!disabled && (
-                <svg 
-                  className="w-5 h-5 text-indigo-500 absolute right-3 pointer-events-none" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24" 
+                <svg
+                  className="w-5 h-5 text-indigo-500 absolute right-3 pointer-events-none"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
               )}
@@ -1112,8 +1110,8 @@ const CustomSelectInput = ({ label, value, options, onChange, disabled }: {
           disabled={disabled}
           className={`w-full px-3 py-2 bg-white border border-indigo-200 rounded-md shadow-sm 
             appearance-none
-            ${disabled ? "bg-gray-50 cursor-not-allowed" : 
-            "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-300"} 
+            ${disabled ? "bg-gray-50 cursor-not-allowed" :
+              "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-300"} 
             text-indigo-900 pr-10`}
         >
           <option value="">-- Chọn --</option>
@@ -1125,18 +1123,18 @@ const CustomSelectInput = ({ label, value, options, onChange, disabled }: {
         </select>
         {!disabled && (
           <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-            <svg 
-              className="w-5 h-5 text-indigo-500" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24" 
+            <svg
+              className="w-5 h-5 text-indigo-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M19 9l-7 7-7-7" 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
               />
             </svg>
           </div>
@@ -1161,8 +1159,8 @@ const CustomTextInput = ({ label, value, onChange, disabled, type = "text" }: {
         <input
           type={type}
           className={`w-full px-3 py-2 bg-white border border-indigo-200 rounded-md shadow-sm 
-            ${disabled ? "bg-gray-50 cursor-not-allowed" : 
-            "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-300"} 
+            ${disabled ? "bg-gray-50 cursor-not-allowed" :
+              "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-300"} 
             text-indigo-900`}
           value={value}
           onChange={onChange}

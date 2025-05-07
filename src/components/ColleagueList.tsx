@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-
+import { EMPLOYEE_ENDPOINTS } from '../utils/apiEndpoints';
 interface Colleague {
   employeeId: number;
   employeeCode: string;
@@ -146,7 +146,7 @@ const ColleagueList = () => {
                 throw new Error('No token found');
             }
 
-            const response = await axios.get(`http://localhost:8080/api/employee/same-company?page=${page}&size=${size}`, {
+            const response = await axios.get(EMPLOYEE_ENDPOINTS.COLLEAGUES(page,size), {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

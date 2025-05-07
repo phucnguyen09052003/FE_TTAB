@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import { FaFileExcel, FaSearch, FaSync } from 'react-icons/fa';
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
-
+import { COMPANY_ENDPOINTS, PROMOTION_ENDPOINTS } from "../utils/apiEndpoints";
 const Promotion = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   interface Promotion {
@@ -62,7 +62,7 @@ const Promotion = () => {
           throw new Error("Không tìm thấy token đăng nhập");
         }
 
-        const response = await axios.get("http://localhost:8080/api/company/list", {
+        const response = await axios.get(COMPANY_ENDPOINTS.COMPANY, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -111,13 +111,8 @@ const Promotion = () => {
         params.couponDateStart = filterDate;
       }
       
-      // Convert params object to query string
-      const queryString = Object.entries(params)
-        .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-        .join('&');
-      
       // Use a single API endpoint with or without query parameters
-      const url = `http://localhost:8080/api/coupon${queryString ? `?${queryString}` : ''}`;
+      const url = PROMOTION_ENDPOINTS.PROMOTION(params);
         
       const response = await axios.get(url, {
         headers: {

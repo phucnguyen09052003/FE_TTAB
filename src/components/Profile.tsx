@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-
+import { EMPLOYEE_ENDPOINTS } from '../utils/apiEndpoints';
 interface UserProfile {
   employeeId: number;
   employeeCode: string;
   employeeName: string;
+  image: string;
   email: string;
   employeePhoneNumber: string;
   employeeLastLogin: string | null;
@@ -50,7 +51,7 @@ const Profile = () => {
         return;
       }
 
-      const response = await axios.get(`http://localhost:8080/api/employee/${employeeCode}`, {
+      const response = await axios.get(EMPLOYEE_ENDPOINTS.BY_CODE(employeeCode), {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -111,7 +112,7 @@ const Profile = () => {
   
       // Gửi yêu cầu đổi mật khẩu
       const response = await axios.put(
-        `http://localhost:8080/api/employee/${employeeCode}/change-password`,
+        EMPLOYEE_ENDPOINTS.CHANGE_PASSWORD(employeeCode),
         {
           oldPassword: currentPassword, // Đổi tên trường cho đúng với API
           newPassword,
@@ -172,12 +173,12 @@ const Profile = () => {
             <div className="md:w-1/3 flex justify-center mb-6 md:mb-0">
               <div className="flex flex-col items-center">
                 <img
-                  src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"
+                  src={profile.image}
                   alt="Profile"
                   className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
                 />
                 <h2 className="mt-4 text-xl font-semibold text-gray-800">{profile.employeeName}</h2>
-                <p className="text-gray-500 text-sm">{profile.employeeCode}</p>
+                <p className="text-gray-500 text-sm">Mã nhân viên: {profile.employeeCode}</p>
               </div>
             </div>
             
@@ -195,7 +196,7 @@ const Profile = () => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-500">Công ty</label>
-                  <p className="mt-1 text-gray-900 font-medium">{profile.companyName} ({profile.companyCode})</p>
+                  <p className="mt-1 text-gray-900 font-medium">Công ty: {profile.companyName} ({profile.companyCode})</p>
                 </div>
                 
                 <div>

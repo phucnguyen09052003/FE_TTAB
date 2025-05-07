@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import loginImg from "../assets/login.jpg";
 import { FaEye, FaEyeSlash, FaSignInAlt, FaExclamationCircle, FaCheckCircle } from "react-icons/fa";
+import { AUTH_ENDPOINTS } from "../utils/apiEndpoints";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -42,7 +43,7 @@ export default function Login() {
     }
 
     try {
-      const res = await axios.post("http://localhost:8080/api/auth/login", {
+      const res = await axios.post(AUTH_ENDPOINTS.LOGIN, {
         email,
         password,
       });

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { DEPARTMENT_ENDPOINTS } from "../utils/apiEndpoints";
 
 interface Department {
   id: number;
@@ -39,7 +40,7 @@ const OrgChart = () => {
           return;
         }
 
-        const response = await axios.get(`http://localhost:8080/api/department/company/${companyCode}`, {
+        const response = await axios.get(DEPARTMENT_ENDPOINTS.BY_COMPANY(companyCode), {
           headers: {
             Authorization: `Bearer ${token}`,
           },
