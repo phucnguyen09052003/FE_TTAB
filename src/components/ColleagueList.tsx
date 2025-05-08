@@ -134,6 +134,10 @@ const ColleagueList = () => {
     const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+    const [totalElements, setTotalElements] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [allColleagues, setAllColleagues] = useState<Colleague[]>([]); // New state for all data
+    const [hasLoadedAll, setHasLoadedAll] = useState(false); // Track if all data is loaded
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -144,29 +148,35 @@ const ColleagueList = () => {
     }, [searchTerm]);
 
     useEffect(() => {
-        setCurrentPage(0); // Reset về trang đầu tiên khi search
-        fetchColleagues(0, itemsPerPage);
-    }, [debouncedSearchTerm, itemsPerPage]);
+        if (!hasLoadedAll) {
+            fetchAllColleagues();
+        }
 
-    useEffect(() => {
-        fetchColleagues(currentPage, itemsPerPage);
-    }, [currentPage, itemsPerPage]);
-
-    useEffect(() => {
-        if (!searchTerm.trim()) {
-            setFilteredColleagues(colleagues);
+        if (searchTerm.trim() === '') {
+            // If no search term, use paginated data from API
+            fetchColleagues(currentPage, itemsPerPage);
             return;
         }
 
-        const searchTermLower = searchTerm.toLowerCase();
-        const filtered = colleagues.filter(colleague => 
-            colleague.employeeName.toLowerCase().includes(searchTermLower) ||
-            colleague.employeeCode.toLowerCase().includes(searchTermLower)
+        // Search in all colleagues
+        const searchLower = searchTerm.toLowerCase();
+        const filtered = allColleagues.filter(colleague =>
+            colleague.employeeName.toLowerCase().includes(searchLower) ||
+            colleague.employeeCode.toLowerCase().includes(searchLower) ||
+            colleague.email.toLowerCase().includes(searchLower)
         );
-        
+
         setFilteredColleagues(filtered);
-        setCurrentPage(0); // Reset về trang đầu khi tìm kiếm
-    }, [searchTerm, colleagues]);
+        setTotalElements(filtered.length);
+        setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+        setCurrentPage(0);
+    }, [searchTerm, hasLoadedAll]);
+
+    useEffect(() => {
+        if (!searchTerm.trim()) {
+            fetchColleagues(currentPage, itemsPerPage);
+        }
+    }, [currentPage, itemsPerPage]);
 
     const fetchColleagues = async (page: number, size: number) => {
         try {
@@ -176,12 +186,7 @@ const ColleagueList = () => {
                 throw new Error('No token found');
             }
 
-            let url = EMPLOYEE_ENDPOINTS.COLLEAGUES(page, size);
-            if (debouncedSearchTerm) {
-                url += `&search=${encodeURIComponent(debouncedSearchTerm)}`;
-            }
-
-            const response = await axios.get(url, {
+            const response = await axios.get(EMPLOYEE_ENDPOINTS.COLLEAGUES(page, size), {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -190,11 +195,11 @@ const ColleagueList = () => {
             if (response.data?.status === 200) {
                 const paginatedData = response.data.data as PaginatedResponse;
                 setColleagues(paginatedData.content);
-            } else {
-                setError('Failed to fetch colleagues data');
+                setFilteredColleagues(paginatedData.content);
+                setTotalElements(paginatedData.totalElements);
+                setTotalPages(paginatedData.totalPages);
             }
         } catch (err) {
-            console.error('Error fetching colleagues:', err);
             setError(axios.isAxiosError(err) 
                 ? err.response?.data?.message || 'Không thể tải danh sách đồng nghiệp'
                 : 'Đã xảy ra lỗi khi tải dữ liệu'
@@ -204,20 +209,35 @@ const ColleagueList = () => {
         }
     };
 
+    const fetchAllColleagues = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No token found');
+            }
+
+            // Fetch with a large size to get all records
+            const response = await axios.get(EMPLOYEE_ENDPOINTS.COLLEAGUES(0, 1000), {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (response.data?.status === 200) {
+                setAllColleagues(response.data.data.content);
+                setHasLoadedAll(true);
+            }
+        } catch (err) {
+            console.error('Error fetching all colleagues:', err);
+        }
+    };
+
+    const currentColleagues = searchTerm.trim()
+        ? filteredColleagues.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage)
+        : filteredColleagues;
+
     if (loading && colleagues.length === 0) return <div className="p-6 text-center text-gray-500">Đang tải dữ liệu...</div>;
     if (error) return <div className="p-6 text-center text-red-500">{error}</div>;
-
-    // Tính toán phân trang cho dữ liệu đã lọc
-    const paginatedColleagues = filteredColleagues.slice(
-        currentPage * itemsPerPage,
-        (currentPage + 1) * itemsPerPage
-    );
-
-    // Cập nhật các giá trị tính toán
-    const totalItems = filteredColleagues.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const startItem = currentPage * itemsPerPage + 1;
-    const endItem = Math.min((currentPage + 1) * itemsPerPage, totalItems);
 
     return (
         <div className="w-full overflow-hidden">
@@ -278,7 +298,7 @@ const ColleagueList = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {paginatedColleagues.map((colleague, index) => (
+                        {currentColleagues.map((colleague, index) => (
                             <tr 
                                 key={colleague.employeeId} 
                                 className="bg-white border-b hover:bg-gray-50 cursor-pointer"
@@ -288,7 +308,7 @@ const ColleagueList = () => {
                                 }}
                             >
                                 <td className="p-4 text-gray-500">
-                                    {startItem + index}
+                                    {currentPage * itemsPerPage + index + 1}
                                 </td>
                                 <td className="p-4">
                                     <img
@@ -332,7 +352,7 @@ const ColleagueList = () => {
             <div className="mt-4 flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6 rounded-lg">
                 <div className="flex items-center text-sm text-gray-700">
                     <span>
-                        Hiển thị {startItem} đến {endItem} trong số {totalItems} mục
+                        Hiển thị {currentPage * itemsPerPage + 1} đến {Math.min((currentPage + 1) * itemsPerPage, totalElements)} trong số {totalElements} mục
                     </span>
                 </div>
                 <div className="flex items-center space-x-2">
