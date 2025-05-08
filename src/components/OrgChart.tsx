@@ -87,29 +87,41 @@ const OrgChart = () => {
   }
 
   return (
-    <div className="flex flex-col justify-center items-center">
+    <div className="flex flex-col justify-center items-center p-8">
       <div className="container mx-auto text-center">
         <div className="flex justify-center">
           <div className="text-center">
             {/* First Level */}
-            <div className="flex justify-center space-x-8">
-              {rootDepartments.map((dept) => (
+            <div className="flex justify-center space-x-8 relative">
+              {rootDepartments.map((dept, index) => (
                 <div key={dept.id} className="relative flex flex-col items-center">
                   <div className="w-64 border border-indigo-200 rounded-lg bg-gradient-to-br from-indigo-50 to-white shadow-md">
                     <div className="border-b border-indigo-200 p-3 font-bold text-indigo-900 text-center text-sm md:text-base bg-indigo-50">
                       Phòng ban: {dept.departmentName}
                     </div>
                     <div className="p-4 text-center">
-                      {/* <p className="text-orange-600 font-medium text-sm">Code: {dept.departmentCode}</p> */}
-                      <div className="mt-3 justify-center">
-                        <p className="text-gray-600">Công ty: {dept.companyName}</p>
-                      </div>
                       <div className="mt-3 text-indigo-600 font-medium text-sm">
                         {dept.employeeCount} thành viên
                       </div>
                     </div>
                   </div>
-                  <div className="border-l-2 border-indigo-300 h-12 mt-2"></div>
+                  {/* Vertical line and horizontal connector for child departments */}
+                  {departmentsByLevel[2]?.length > 0 && (
+                    <>
+                      <div className="border-l-2 border-indigo-300 h-12"></div>
+                      {index === Math.floor(rootDepartments.length / 2) && (
+                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
+                          <div className="border-t-2 border-indigo-300" 
+                               style={{
+                                 width: `${(departmentsByLevel[2].length - 1) * 288}px`,
+                                 position: 'absolute',
+                                 left: `-${((departmentsByLevel[2].length - 1) * 288) / 2}px`
+                               }}>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               ))}
             </div>
@@ -120,30 +132,46 @@ const OrgChart = () => {
               .filter(level => level > 1)
               .sort((a, b) => a - b)
               .map(level => (
-                <div key={level} className="flex justify-center space-x-8 mt-6 relative">
-                  <div className="absolute top-[-24px] left-0 right-0 flex justify-center">
-                    <div className="border-t-2 border-indigo-300 w-full"></div>
-                  </div>
-
-                  {departmentsByLevel[level].map((dept) => (
-                    <div key={dept.id} className="relative">
-                      <div className="relative flex flex-col items-center">
-                        <div className="w-64 border border-indigo-200 rounded-lg bg-gradient-to-br from-indigo-50 to-white shadow-md hover:shadow-lg transition-shadow duration-200">
-                          <div className="border-b border-indigo-200 p-3 font-bold text-indigo-900 text-center text-sm md:text-base bg-indigo-50">
-                            Phòng ban: {dept.departmentName}
-                          </div>
-                          <div className="p-4 text-center">
-                            {/* <p className="text-orange-600 font-medium text-sm">Code: {dept.departmentCode}</p> */}
-                            {/* <p className="text-gray-500 text-xs mt-1">Thuộc: {dept.departmentParent}</p> */}
-                            <div className="mt-3 text-indigo-600 font-medium text-sm">
-                              {dept.employeeCount} thành viên
+                <div key={level} className="relative mt-0">
+                  <div className="flex justify-center space-x-8 pt-12">
+                    {departmentsByLevel[level].map((dept, index) => (
+                      <div key={dept.id} className="relative">
+                        <div className="relative flex flex-col items-center">
+                          {/* Vertical line to parent */}
+                          <div className="absolute top-[-48px] left-1/2 transform -translate-x-1/2 border-l-2 border-indigo-300 h-12"></div>
+                          
+                          <div className="w-64 border border-indigo-200 rounded-lg bg-gradient-to-br from-indigo-50 to-white shadow-md">
+                            <div className="border-b border-indigo-200 p-3 font-bold text-indigo-900 text-center text-sm md:text-base bg-indigo-50">
+                              Phòng ban: {dept.departmentName}
+                            </div>
+                            <div className="p-4 text-center">
+                              <div className="mt-3 text-indigo-600 font-medium text-sm">
+                                {dept.employeeCount} thành viên
+                              </div>
                             </div>
                           </div>
+
+                          {/* Vertical line and horizontal connector for next level */}
+                          {departmentsByLevel[level + 1]?.length > 0 && (
+                            <>
+                              <div className="border-l-2 border-indigo-300 h-12"></div>
+                              {index === Math.floor(departmentsByLevel[level].length / 2) && (
+                                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
+                                  <div className="border-t-2 border-indigo-300" 
+                                       style={{
+                                         width: `${(departmentsByLevel[level + 1].length - 1) * 288}px`,
+                                         position: 'absolute',
+                                         left: `-${((departmentsByLevel[level + 1].length - 1) * 288) / 2}px`
+                                       }}>
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          )}
                         </div>
-                        <div className="border-l-2 border-indigo-300 h-6 absolute top-[-24px]"></div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               ))}
           </div>

@@ -124,6 +124,7 @@ const ColleagueModal = ({
 
 const ColleagueList = () => {
     const [colleagues, setColleagues] = useState<Colleague[]>([]);
+    const [filteredColleagues, setFilteredColleagues] = useState<Colleague[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(0); // API uses 0-based pagination
@@ -131,12 +132,41 @@ const ColleagueList = () => {
     const itemsPerPageOptions = [5, 10, 15, 20];
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(null);
-    const [totalPages, setTotalPages] = useState(0);
-    const [totalItems, setTotalItems] = useState(0);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm]);
+
+    useEffect(() => {
+        setCurrentPage(0); // Reset về trang đầu tiên khi search
+        fetchColleagues(0, itemsPerPage);
+    }, [debouncedSearchTerm, itemsPerPage]);
 
     useEffect(() => {
         fetchColleagues(currentPage, itemsPerPage);
     }, [currentPage, itemsPerPage]);
+
+    useEffect(() => {
+        if (!searchTerm.trim()) {
+            setFilteredColleagues(colleagues);
+            return;
+        }
+
+        const searchTermLower = searchTerm.toLowerCase();
+        const filtered = colleagues.filter(colleague => 
+            colleague.employeeName.toLowerCase().includes(searchTermLower) ||
+            colleague.employeeCode.toLowerCase().includes(searchTermLower)
+        );
+        
+        setFilteredColleagues(filtered);
+        setCurrentPage(0); // Reset về trang đầu khi tìm kiếm
+    }, [searchTerm, colleagues]);
 
     const fetchColleagues = async (page: number, size: number) => {
         try {
@@ -146,7 +176,12 @@ const ColleagueList = () => {
                 throw new Error('No token found');
             }
 
-            const response = await axios.get(EMPLOYEE_ENDPOINTS.COLLEAGUES(page,size), {
+            let url = EMPLOYEE_ENDPOINTS.COLLEAGUES(page, size);
+            if (debouncedSearchTerm) {
+                url += `&search=${encodeURIComponent(debouncedSearchTerm)}`;
+            }
+
+            const response = await axios.get(url, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -155,8 +190,6 @@ const ColleagueList = () => {
             if (response.data?.status === 200) {
                 const paginatedData = response.data.data as PaginatedResponse;
                 setColleagues(paginatedData.content);
-                setTotalPages(paginatedData.totalPages);
-                setTotalItems(paginatedData.totalElements);
             } else {
                 setError('Failed to fetch colleagues data');
             }
@@ -174,7 +207,15 @@ const ColleagueList = () => {
     if (loading && colleagues.length === 0) return <div className="p-6 text-center text-gray-500">Đang tải dữ liệu...</div>;
     if (error) return <div className="p-6 text-center text-red-500">{error}</div>;
 
-    // Calculate displayed items range
+    // Tính toán phân trang cho dữ liệu đã lọc
+    const paginatedColleagues = filteredColleagues.slice(
+        currentPage * itemsPerPage,
+        (currentPage + 1) * itemsPerPage
+    );
+
+    // Cập nhật các giá trị tính toán
+    const totalItems = filteredColleagues.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
     const startItem = currentPage * itemsPerPage + 1;
     const endItem = Math.min((currentPage + 1) * itemsPerPage, totalItems);
 
@@ -184,6 +225,24 @@ const ColleagueList = () => {
             <h2 className="text-xl font-bold text-gray-900 mb-6">
                 THÔNG TIN ĐỒNG NGHIỆP
             </h2>
+
+            {/* Search box */}
+            <div className="mb-6">
+                <div className="relative">
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Tìm kiếm theo tên hoặc mã nhân viên..."
+                        className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
 
             {/* Items per page selector */}
             <div className="flex items-center justify-end mb-4 space-x-4">
@@ -219,7 +278,7 @@ const ColleagueList = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {colleagues.map((colleague, index) => (
+                        {paginatedColleagues.map((colleague, index) => (
                             <tr 
                                 key={colleague.employeeId} 
                                 className="bg-white border-b hover:bg-gray-50 cursor-pointer"

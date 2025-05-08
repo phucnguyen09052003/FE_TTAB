@@ -356,7 +356,7 @@ const MyProfile = () => {
       }
 
       const response = await fetch(
-        SALARY_ENDPOINTS.SALARY(userData.employeeCode, selectedYear.toString()),
+        `${SALARY_ENDPOINTS.SALARY(userData.employeeCode, selectedYear.toString())}?page=${page}`,
         {
           method: 'GET',
           headers: {
@@ -1033,7 +1033,6 @@ const CustomDateInput = ({ label, value, onChange, disabled }: {
   onChange: (date: Date | null) => void;
   disabled: boolean;
 }) => {
-  // Parse the date string to a Date object
   const dateValue = value ? new Date(value) : null;
 
   return (
@@ -1045,8 +1044,8 @@ const CustomDateInput = ({ label, value, onChange, disabled }: {
           onChange={onChange}
           dateFormat="dd/MM/yyyy"
           className={`w-full px-3 py-2 bg-white border border-indigo-200 rounded-md shadow-sm 
-            ${disabled ? "bg-gray-50 cursor-not-allowed" :
-              "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"} 
+            ${disabled ? "bg-gray-50 cursor-not-allowed" : 
+              "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-300"} 
             text-indigo-900`}
           disabled={disabled}
           placeholderText="DD/MM/YYYY"
@@ -1055,38 +1054,26 @@ const CustomDateInput = ({ label, value, onChange, disabled }: {
           dropdownMode="select"
           yearDropdownItemNumber={15}
           popperPlacement="bottom-start"
-          customInput={
-            <div className="flex items-center">
-              <input
-                type="text"
-                className={`w-full px-3 py-2 bg-white border border-indigo-200 rounded-md shadow-sm 
-                  ${disabled ? "bg-gray-50 cursor-not-allowed" :
-                    "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"} 
-                  text-indigo-900 pr-10`}
-                placeholder="DD/MM/YYYY"
-                readOnly
-                value={dateValue ? dateValue.toLocaleDateString('vi-VN') : ''}
-                disabled={disabled}
-              />
-              {!disabled && (
-                <svg
-                  className="w-5 h-5 text-indigo-500 absolute right-3 pointer-events-none"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              )}
-            </div>
-          }
+          wrapperClassName="w-full block"
         />
+        {!disabled && (
+          <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+            <svg
+              className="w-5 h-5 text-indigo-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+        )}
       </div>
     </div>
   );

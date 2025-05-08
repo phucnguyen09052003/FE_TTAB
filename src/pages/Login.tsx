@@ -75,11 +75,11 @@ export default function Login() {
   return (
     <div className="flex flex-col sm:grid sm:grid-cols-2 min-h-screen w-full">
       <div className="hidden sm:block">
-        <img className="w-full h-full object-cover" src={loginImg} alt="Login Background" />
+        <img className="w-full sm:w-[500px h-full object-cover" src={loginImg} alt="Login Background" />
       </div>
 
-      <div className="w-full min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full sm:w-[500px]">
+      <div className="w-[500px] sm:w-full min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full sm:w-[500px]">
           <h2 className="text-3xl font-bold text-white mb-6 text-center">ĐĂNG NHẬP</h2>
           
           {/* Notifications */}

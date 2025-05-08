@@ -52,6 +52,18 @@ const Promotion = () => {
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
   const [totalElements, setTotalElements] = useState(0);
 
+  // Thêm state mới để quản lý debounce
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
+  // Xử lý debounce cho searchTerm
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 1000); 
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
   // Fetch companies when component mounts
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -91,11 +103,11 @@ const Promotion = () => {
       // Build query parameters
       const params: Record<string, string> = {};
       
-      if (searchTerm) {
-        if (searchTerm.length <= 10 || /^[A-Z0-9\-\_]+$/.test(searchTerm)) {
-          params.couponCode = searchTerm;
+      if (debouncedSearchTerm) { // Sử dụng debouncedSearchTerm thay vì searchTerm
+        if (debouncedSearchTerm.length <= 10 || /^[A-Z0-9\-\_]+$/.test(debouncedSearchTerm)) {
+          params.couponCode = debouncedSearchTerm;
         } else {
-          params.couponName = searchTerm;
+          params.couponName = debouncedSearchTerm;
         }
       }
       
@@ -147,7 +159,7 @@ const Promotion = () => {
     }, 300); // Debounce for filter changes
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, filterCompany, filterDiscount, filterDate]);
+  }, [debouncedSearchTerm, filterCompany, filterDiscount, filterDate]); // Thay searchTerm bằng debouncedSearchTerm
 
   // Reset page when filters or items per page change
   useEffect(() => {
