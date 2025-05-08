@@ -5,8 +5,10 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from './pages/Home.tsx'
 import MyProfile from './pages/MyProfile.tsx'
 import Promotion from './pages/Promotion.tsx';
-import Organization from './components/Organization.tsx';
+import Organization from './pages/Organization.tsx';
 import Login from './pages/Login.tsx';
+import ProfilePage from './pages/ProfilePage.tsx';
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Router>
@@ -16,6 +18,7 @@ createRoot(document.getElementById('root')!).render(
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/myprofile" element={<MyProfile />} />
+            <Route path="/profile" element={<ProfilePage />} />
             <Route path="/promotion" element={<Promotion />} />
             <Route path="/organization" element={<Organization />} />
             <Route path="/login" element={<Login />} />
