@@ -1,9 +1,9 @@
-import { FaHome, FaUser, FaGift, FaProjectDiagram, FaCog, FaTimes } from "react-icons/fa";
+import { FaHome, FaUser, FaGift, FaProjectDiagram, FaCog, FaTimes, FaKey } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 
 interface SidebarProps {
   isOpen: boolean;
-  toggleSidebar: () => void;
+  toggleSidebar?: () => void;
 }
 
 const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
@@ -16,20 +16,21 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
     <div className={`fixed lg:static top-0 left-0 h-full bg-gradient-to-b from-slate-800 to-slate-900 shadow-xl transition-all duration-300 z-50 ${
       isOpen ? "w-64" : "w-0 lg:w-64"
     } overflow-hidden`}>
-      <button 
-        onClick={toggleSidebar} 
-        className="absolute top-4 right-4 text-slate-400 hover:text-white lg:hidden transition-colors"
-      >
-        <FaTimes size={20} />
-      </button>
+      {toggleSidebar && (
+        <button 
+          onClick={toggleSidebar} 
+          className="absolute top-4 right-4 text-slate-400 hover:text-white lg:hidden transition-colors"
+        >
+          <FaTimes size={20} />
+        </button>
+      )}
 
       <div className="mt-12 space-y-1 px-3">
         {[
           { path: "/", icon: <FaHome size={18} />, label: "Trang chủ" },
-          { path: "/myprofile", icon: <FaUser size={18} />, label: "Thông tin cá nhân" },
+          { path: "/myprofile", icon: <FaUser size={18} />, label: "Thông tin nhân viên" },
           { path: "/promotion", icon: <FaGift size={18} />, label: "Khuyến mãi" },
-          { path: "/organization", icon: <FaProjectDiagram size={18} />, label: "Sơ đồ tổ chức" },
-          { path: "/settings", icon: <FaCog size={18} />, label: "Cài đặt" }
+          { path: "/organization", icon: <FaProjectDiagram size={18} />, label: "Sơ đồ tổ chức" }
         ].map((item) => (
           <button
             key={item.path}

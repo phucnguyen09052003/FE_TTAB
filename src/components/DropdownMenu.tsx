@@ -34,11 +34,11 @@ const DropdownMenu = () => {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-slate-200 overflow-hidden transform origin-top-right transition-all duration-200 z-50">
           <div className="py-1">
-            <a className="flex items-center px-4 py-3 text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors">
+            {/* <a className="flex items-center px-4 py-3 text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors">
               <FaUser className="text-slate-400 mr-3" size={16} />
               <span>Thông tin cá nhân</span>
-            </a>
-            <a className="flex items-center px-4 py-3 text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors">
+            </a> */}
+            <a href="/profile" className="flex items-center px-4 py-3 text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors">
               <FaKey className="text-slate-400 mr-3" size={16} />
               <span>Đổi mật khẩu</span>
             </a>
