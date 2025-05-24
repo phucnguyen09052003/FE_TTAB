@@ -7,6 +7,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { INFO_EMPLOYEE_ENDPOINTS, SALARY_ENDPOINTS } from "../utils/apiEndpoints";
 import { API_BASE_URL } from "../utils/env.config";
+import { useAuthCheck } from "../utils/auth";
 
 
 // Constants for select fields
@@ -127,6 +128,7 @@ const Notification = ({ type, message, onClose }: NotificationProps) => {
 };
 
 const MyProfile = () => {
+  const checkAuth = useAuthCheck();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [isEditing, setIsEditing] = useState(false);
@@ -245,6 +247,9 @@ const MyProfile = () => {
 
   const saveUserData = async () => {
     if (!userData) return;
+    if (!checkAuth()) {
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -313,6 +318,9 @@ const MyProfile = () => {
   const fetchUserData = async () => {
     setLoading(true);
     const token = localStorage.getItem("token");
+    if (!checkAuth()) {
+      return;
+    }
     let employeeCode = "";
     if (token) {
       const decodedToken: any = jwtDecode(token);
@@ -345,6 +353,9 @@ const MyProfile = () => {
   // Fetch salary data from API
   const fetchSalaryData = async (page: number = 0) => {
     if (!userData?.employeeCode) return;
+    if (!checkAuth()) {
+      return;
+    }
 
     setLoadingSalary(true);
     setSalaryError(null);
@@ -401,17 +412,20 @@ const MyProfile = () => {
     fetchSalaryData(newPage);
   };
 
+  // Initial data fetch
+  useEffect(() => {
+    if (checkAuth()) {
+      fetchUserData();
+    }
+  }, []);
+
   // Fetch salary data when year changes
   useEffect(() => {
-    if (userData?.employeeCode) {
+    if (userData?.employeeCode && checkAuth()) {
       setCurrentPage(0); // Reset to first page when year changes
       fetchSalaryData(0);
     }
   }, [selectedYear, userData?.employeeCode]);
-
-  useEffect(() => {
-    fetchUserData();
-  }, []);
 
   if (loading) {
     return <p>Đang tải dữ liệu...</p>;
