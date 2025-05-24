@@ -1,11 +1,18 @@
 import { useState, useEffect } from "react";
 import { FaUser, FaKey, FaSignOutAlt, FaChevronDown } from "react-icons/fa";
+import { checkTokenExpiration } from "../utils/auth";
 
 const DropdownMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [fullName, setFullName] = useState("User");
 
   useEffect(() => {
+    // Check token expiration on component mount
+    if (!checkTokenExpiration()) {
+      handleLogout();
+      return;
+    }
+
     const storedName = localStorage.getItem("fullname");
   
     if (storedName) {
@@ -14,7 +21,7 @@ const DropdownMenu = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("fullname"); 
+    localStorage.clear(); // Clear all localStorage data
     window.location.href = "/login"; 
   };
 

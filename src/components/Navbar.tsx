@@ -1,11 +1,20 @@
 import { FaSearch, FaBell, FaBars } from "react-icons/fa";
 import DropdownMenu from "./DropdownMenu";
+import { useEffect } from "react";
+import { useAuthCheck } from "../utils/auth";
 
 interface NavbarProps {
   toggleSidebar: () => void;
 }
 
 const Navbar = ({ toggleSidebar }: NavbarProps) => {
+  const checkAuth = useAuthCheck();
+
+  useEffect(() => {
+    // Check token expiration on component mount
+    checkAuth();
+  }, []);
+
   return (
     <div className="flex justify-between items-center p-4 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white shadow-lg">
       <button 
